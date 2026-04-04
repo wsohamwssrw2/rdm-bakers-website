@@ -409,13 +409,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="label">Room name</label>
-                    <div class="room-row">
-                        <input type="text" id="room-input" placeholder="team-sync, project-x, happy-hour" maxlength="50">
-                        <div class="generate-btn" id="generate-btn" title="Generate random room">🎲</div>
-                    </div>
-                </div>
+    <label class="label">Room name</label>
+    <div class="room-row">
+        <input type="text" id="room-input" placeholder="team-sync, project-x, happy-hour" maxlength="50">
+        <div class="generate-btn" id="generate-btn" title="Generate random room">🎲</div>
+    </div>
+</div>
 
+<!-- ✅ ADD THIS BELOW -->
+<div class="form-group">
+    <label class="label">Host Key (only for host)</label>
+    <input type="password" id="host-key" placeholder="Enter secret key">
+</div>
                 <!-- Join Button -->
                 <button id="join-btn" class="join-btn">
                     <span>Join Meeting</span>
