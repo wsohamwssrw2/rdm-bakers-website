@@ -492,200 +492,133 @@
 
     <script>
         // DOM Elements
-        const landingPage = document.getElementById('landing')
-        const meetingPage = document.getElementById('meeting')
-        const jitsiIframe = document.getElementById('jitsi-iframe')
-        
-        const usernameInput = document.getElementById('username-input')
-        const roomInput = document.getElementById('room-input')
-        const joinBtn = document.getElementById('join-btn')
-        const generateBtn = document.getElementById('generate-btn')
-        const leaveBtn = document.getElementById('leave-btn')
-        const roomTitleDisplay = document.getElementById('room-title-display')
-        
-        let currentRoom = ''
-        let timerInterval = null
+       <script>
 
-        // Generate a random room name
-        function generateRandomRoom() {
-            const adjectives = ['cosmic','neon','quantum','echo','pulse','zenith','nova','lunar','spark','velocity']
-            const nouns = ['hub','arena','lounge','forge','nest','core','vault','sphere','wave','summit']
-            const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)]
-            const randomNoun = nouns[Math.floor(Math.random() * nouns.length)]
-            const randomNum = Math.floor(100 + Math.random() * 900)
-            return `${randomAdj}-${randomNoun}-${randomNum}`
-        }
+// DOM Elements
+const landingPage = document.getElementById('landing')
+const meetingPage = document.getElementById('meeting')
+const jitsiIframe = document.getElementById('jitsi-iframe')
 
-        // Populate demo rooms
-        function populateDemoRooms() {
-            const container = document.getElementById('demo-badges')
-            const examples = ['design-sync-874', 'weekly-sync', 'client-pitch', 'team-brainstorm', 'happy-friday']
-            
-            examples.forEach(room => {
-                const badge = document.createElement('div')
-                badge.className = 'demo-badge'
-                badge.textContent = room
-                badge.onclick = () => {
-                    roomInput.value = room
-                    // Trigger join with current username
-                    usernameInput.value = usernameInput.value || 'Aura'
-                    joinMeeting()
-                }
-                container.appendChild(badge)
-            })
-        }
+const usernameInput = document.getElementById('username-input')
+const roomInput = document.getElementById('room-input')
+const joinBtn = document.getElementById('join-btn')
+const generateBtn = document.getElementById('generate-btn')
+const leaveBtn = document.getElementById('leave-btn')
+const roomTitleDisplay = document.getElementById('room-title-display')
 
-        // Construct Jitsi URL with config
-        function buildJitsiUrl(roomName, displayName) {
-            const encodedRoom = encodeURIComponent(roomName.trim())
-            const encodedName = encodeURIComponent(displayName.trim())
-            
-            // Config object passed via URL hash
-            const configString = [
-                `config.displayName=%22${encodedName}%22`,
-                `config.prejoinPageEnabled=false`,
-                `config.startWithAudioMuted=false`,
-                `config.startWithVideoMuted=false`,
-                `config.enableClosePage=false`,
-                `config.disableDeepLinking=true`,
-                `interfaceConfigOverwrite=%7B%22DEFAULT_REMOTE_DISPLAY_NAME%22%3A%22Participant%22%2C%22TOOLBAR_BUTTONS%22%3A%5B%22microphone%22%2C%22camera%22%2C%22desktop%22%2C%22chat%22%2C%22raisehand%22%2C%22participants-pane%22%2C%22tileview%22%2C%22fullscreen%22%2C%22hangup%22%5D%7D`
-            ].join('&')
-            
-            return `https://meet.jit.si/${encodedRoom}#${configString}`
-        }
+let currentRoom = ''
+let timerInterval = null
+let isHost = false
+let currentUser = ''
 
-        // Join the meeting
-        function joinMeeting() {
-            let room = roomInput.value.trim()
-            
-            // If no room entered → generate one instantly
-            if (!room) {
-                room = generateRandomRoom()
-                roomInput.value = room
-            }
-            
-            const username = usernameInput.value.trim() || 'Aura'
-            currentRoom = room
-            
-            // Build and load Jitsi
-            const jitsiUrl = buildJitsiUrl(room, username)
-            jitsiIframe.src = jitsiUrl
-            
-            // Update UI
-            roomTitleDisplay.textContent = room
-            landingPage.style.opacity = '0'
-            
-            // Transition to meeting
-            setTimeout(() => {
-                landingPage.style.display = 'none'
-                meetingPage.style.display = 'flex'
-                meetingPage.classList.add('fade-in')
-                
-                // Start meeting timer
-                startMeetingTimer()
-                
-                // Show floating hint after 4 seconds
-                setTimeout(() => {
-                    const hint = document.getElementById('back-hint')
-                    if (hint) hint.style.display = 'flex'
-                }, 4000)
-            }, 420)
-        }
+// Fake Google Login
+function googleLogin() {
+    const email = prompt("Enter your Google Email:")
+    if (!email) return false
+    localStorage.setItem("user", email)
+    currentUser = email
+    return true
+}
 
-        // Start elapsed time counter
-        function startMeetingTimer() {
-            let seconds = 0
-            const timeEl = document.getElementById('meeting-time')
-            
-            if (timerInterval) clearInterval(timerInterval)
-            
-            timerInterval = setInterval(() => {
-                seconds++
-                const min = Math.floor(seconds / 60).toString().padStart(2, '0')
-                const sec = (seconds % 60).toString().padStart(2, '0')
-                timeEl.textContent = `${min}:${sec}`
-            }, 1000)
-        }
+function checkLogin() {
+    const user = localStorage.getItem("user")
+    if (!user) return googleLogin()
+    currentUser = user
+    return true
+}
 
-        // Leave meeting and return to lobby
-        function leaveMeeting() {
-            if (timerInterval) {
-                clearInterval(timerInterval)
-                timerInterval = null
-            }
-            
-            // Unload iframe completely
-            jitsiIframe.src = ''
-            
-            // Reset meeting page
-            meetingPage.style.display = 'none'
-            landingPage.style.display = 'flex'
-            landingPage.style.opacity = '1'
-            
-            // Clear room field but keep username
-            roomInput.value = ''
-            currentRoom = ''
-            
-            // Reset demo badges in case user wants to rejoin
-            console.log('%c✅ Returned to lobby. Ready for next meeting!', 'color:#ff2d55;font-weight:600')
-        }
+// Generate Room
+function generateRandomRoom() {
+    return "room-" + Math.floor(Math.random()*9999)
+}
 
-        // Toggle fullscreen on the entire document
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {})
-            } else {
-                document.exitFullscreen()
-            }
-        }
+// Jitsi URL
+function buildJitsiUrl(roomName, displayName) {
+    return `https://meet.jit.si/${roomName}#config.displayName="${displayName}"`
+}
 
-        // Main initialization
-        function initialize() {
-            console.log('%c🚀 PREEARN ready – single HTML file, full Jitsi integration', 'background:#ff2d55;color:#fff;padding:2px 6px;border-radius:3px;font-size:13px')
-            
-            // Generate button
-            generateBtn.addEventListener('click', () => {
-                const newRoom = generateRandomRoom()
-                roomInput.value = newRoom
-                // Optional micro animation
-                roomInput.style.transitionDuration = '0ms'
-                roomInput.style.transform = 'scale(0.95)'
-                setTimeout(() => {
-                    roomInput.style.transitionDuration = '200ms'
-                    roomInput.style.transform = 'scale(1)'
-                }, 1)
-            })
-            
-            // Join button
-            joinBtn.addEventListener('click', joinMeeting)
-            
-            // Allow pressing Enter in inputs
-            const inputs = [usernameInput, roomInput]
-            inputs.forEach(input => {
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') joinMeeting()
-                })
-            })
-            
-            // Leave button
-            leaveBtn.addEventListener('click', leaveMeeting)
-            
-            // Demo rooms
-            populateDemoRooms()
-            
-            // Keyboard shortcut hint
-            console.log('%cTip: Press "Escape" while in meeting to quickly return to lobby', 'color:#888;font-size:11px')
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && meetingPage.style.display === 'flex') {
-                    leaveMeeting()
-                }
-            })
-            
-            console.log('✅ Complete single-file video meeting website loaded. Ready to deploy on GitHub Pages!')
+// JOIN WITH HOST CONTROL
+function joinMeeting() {
+
+    if (!checkLogin()) return
+
+    let room = roomInput.value.trim()
+
+    if (!room) {
+        room = generateRandomRoom()
+        roomInput.value = room
+    }
+
+    const host = localStorage.getItem("host_" + room)
+
+    if (!host) {
+        localStorage.setItem("host_" + room, currentUser)
+        isHost = true
+        alert("You are HOST 👑")
+    } else {
+        if (host !== currentUser) {
+            alert("Only host allowed ❌")
+            return
         }
-        
-        // Boot the app
-        window.onload = initialize
-    </script>
+        isHost = true
+    }
+
+    currentRoom = room
+
+    const jitsiUrl = buildJitsiUrl(room, currentUser)
+    jitsiIframe.src = jitsiUrl
+
+    roomTitleDisplay.textContent = room
+    landingPage.style.display = 'none'
+    meetingPage.style.display = 'flex'
+
+    startMeetingTimer()
+}
+
+// TIMER
+function startMeetingTimer() {
+    let seconds = 0
+    const timeEl = document.getElementById('meeting-time')
+
+    if (timerInterval) clearInterval(timerInterval)
+
+    timerInterval = setInterval(() => {
+        seconds++
+        const min = Math.floor(seconds / 60).toString().padStart(2, '0')
+        const sec = (seconds % 60).toString().padStart(2, '0')
+        timeEl.textContent = `${min}:${sec}`
+    }, 1000)
+}
+
+// LEAVE
+function leaveMeeting() {
+    if (timerInterval) clearInterval(timerInterval)
+
+    jitsiIframe.src = ''
+    meetingPage.style.display = 'none'
+    landingPage.style.display = 'flex'
+
+    if (isHost) {
+        localStorage.removeItem("host_" + currentRoom)
+        alert("Meeting closed by host")
+    }
+
+    currentRoom = ''
+}
+
+// INIT
+function initialize() {
+
+    joinBtn.addEventListener('click', joinMeeting)
+    leaveBtn.addEventListener('click', leaveMeeting)
+
+    generateBtn.addEventListener('click', () => {
+        roomInput.value = generateRandomRoom()
+    })
+}
+
+window.onload = initialize
+
+</script>
 </body>
 </html>
