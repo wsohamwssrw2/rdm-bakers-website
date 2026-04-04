@@ -496,10 +496,8 @@
     </div>
 
     <script>
-        // DOM Elements
-       <script>
-
 // DOM Elements
+        
 const landingPage = document.getElementById('landing')
 const meetingPage = document.getElementById('meeting')
 const jitsiIframe = document.getElementById('jitsi-iframe')
@@ -562,9 +560,8 @@ function joinMeeting() {
         alert("You are HOST 👑")
     } else {
         if (host !== currentUser) {
-            alert("Only host allowed ❌")
-            return
-        }
+    alert("Waiting for host approval ⏳")
+}
         isHost = true
     }
 
